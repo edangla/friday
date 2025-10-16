@@ -16,7 +16,6 @@
   <style>
     /* ====== THEME (Light by default) ====== */
     :root {
-      /* Surfaces & text */
       --bg: #f0f2f5;            /* chat area bg */
       --panel: #ffffff;         /* header & input bar */
       --txt: #111111;           /* main text */
@@ -25,13 +24,12 @@
       --bubble-border: #e5e7eb; /* subtle border */
       --ok: #16a34a;            /* active green */
 
-      /* Inputs & buttons */
-      --input-bg: #ffffff;
+      --input-bg: #ffffff;      /* inputs */
       --btn-bg: #eef2f7;        /* neutral button bg */
 
-      /* Primary (blue) – light tone */
-      --primary-bg: #a8c8ff;            /* my msg bubble (más intenso) */
-      --primary-solid: #a8c8ff;         /* send button mismo tono */
+      /* Primary (blue) */
+      --primary-bg: #a8c8ff;            /* user bubble */
+      --primary-solid: #a8c8ff;         /* send button */
       --primary-solid-hover: #90b9ff;
 
       --radius: 16px;
@@ -53,9 +51,8 @@
       --input-bg: #0b1324;
       --btn-bg: #0b1324;
 
-      /* Primary (blue) – darker tone */
-      --primary-bg: #0c3a8c;         /* my msg bubble (más intenso) */
-      --primary-solid: #0c3a8c;      /* send button mismo tono */
+      --primary-bg: #0c3a8c;
+      --primary-solid: #0c3a8c;
       --primary-solid-hover: #0a3278;
     }
 
@@ -71,16 +68,14 @@
     }
 
     .app { min-height: 100vh; display: grid; grid-template-rows: auto 1fr auto; }
-
-    @supports (min-height: 100dvh) {
-      .app { min-height: 100dvh; }
-    }
+    @supports (min-height: 100dvh) { .app { min-height: 100dvh; } }
 
     /* ====== HEADER ====== */
     header {
       position: sticky; top: 0; z-index: 10;
       display: grid; grid-template-columns: auto 1fr auto; align-items: center;
-      gap: 8px; padding: calc(12px + var(--sat)) calc(16px + var(--sar)) 12px calc(16px + var(--sal)); background: var(--panel); border-bottom: 1px solid var(--bubble-border);
+      gap: 8px; padding: calc(12px + var(--sat)) calc(16px + var(--sar)) 12px calc(16px + var(--sal));
+      background: var(--panel); border-bottom: 1px solid var(--bubble-border);
     }
     .title { display:flex; align-items:center; justify-content:center; gap:8px; text-align:left; }
     .title .title-text { display:flex; flex-direction:column; line-height: 1; }
@@ -112,7 +107,7 @@
     .send:hover { background: var(--primary-solid-hover); }
     .send[disabled] { background: var(--btn-bg); color: var(--muted); cursor: not-allowed; opacity: 0.7; }
 
-    /* Prevent iOS zoom on focus: ensure interactive controls are >=16px */
+    /* Prevent iOS zoom on focus */
     input, textarea, select, button { font-size: 16px; }
 
     /* ====== SETTINGS MODAL ====== */
@@ -126,7 +121,7 @@
     input[type="text"], select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--bubble-border); background: var(--input-bg); color: var(--txt); font-size: 16px; }
 
     /* ====== DRAWER (Conversaciones) ====== */
-    .drawer { position: fixed; inset: 0 auto 0 0; width: min(92vw, 360px); max-width: 92vw; background: var(--panel); border-right: 1px solid var(--bubble-border); transform: translateX(-100%); transition: transform .2s ease; z-index: 20; display: grid; grid-template-rows: auto 1fr; }
+    .drawer { position: fixed; inset: 0 auto 0 0; width: min(77vw, 360px); max-width: 77vw; background: var(--panel); border-right: 1px solid var(--bubble-border); transform: translateX(-100%); transition: transform .2s ease; z-index: 20; display: grid; grid-template-rows: auto 1fr; }
     .drawer.open { transform: translateX(0); }
     .drawer-head { display:flex; align-items:center; justify-content: space-between; gap:8px; padding: 12px; border-bottom: 1px solid var(--bubble-border); }
     .drawer-title { font-weight: 700; margin-left: 4px; }
@@ -138,10 +133,8 @@
     .conv-sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .conv-card { display:grid; grid-template-rows: auto auto auto; gap:2px; align-content:center; height:100%; min-width:0; }
 
-    @media (min-width: 768px) {
-      .chat { padding: 16px; gap: 10px; }
-    }
-  @media (max-width: 420px) {
+    @media (min-width: 768px) { .chat { padding: 16px; gap: 10px; } }
+    @media (max-width: 420px) {
       .title h1 { font-size: 16px; }
       .conv-item { height: 80px; }
       .conv-title { font-size: 13px; }
@@ -221,151 +214,64 @@
   (() => {
     'use strict';
 
-    /* =======================
-       DOM & UI references
-    ======================= */
+    // ========== DOM ==========
     const $ = (sel) => document.querySelector(sel);
     const ui = {
-      chat: $('#chat'),
-      input: $('#input'),
-      btnSend: $('#btnSend'),
-      btnDrawer: $('#btnDrawer'),
-      btnNewChat: $('#btnNewChat'),
-      btnDrawerInside: $('#btnDrawerInside'),
-      drawer: $('#drawer'),
-      convList: $('#convList'),
-      settingsModal: $('#settingsModal'),
-      btnSettings: $('#btnSettings'),
-      btnClose: $('#btnClose'),
-      btnSave: $('#btnSave'),
-      cfgUrl: $('#cfgUrl'),
-      cfgTheme: $('#cfgTheme'),
+      chat: $('#chat'), input: $('#input'), btnSend: $('#btnSend'),
+      btnDrawer: $('#btnDrawer'), btnNewChat: $('#btnNewChat'), btnDrawerInside: $('#btnDrawerInside'),
+      drawer: $('#drawer'), convList: $('#convList'),
+      settingsModal: $('#settingsModal'), btnSettings: $('#btnSettings'), btnClose: $('#btnClose'), btnSave: $('#btnSave'),
+      cfgUrl: $('#cfgUrl'), cfgTheme: $('#cfgTheme'),
     };
     const composerEl = document.querySelector('.composer');
 
-    /* =======================
-       Utils (pure functions)
-    ======================= */
+    // ========== Utils ==========
     const escapeHtml = (s) => String(s)
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/\"/g,'&quot;')
-      .replace(/'/g,'&#39;');
-
-    const formatTimeEU = (d) => {
-      try { return new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false, hourCycle: 'h23' }); }
-      catch { const now = new Date(); const pad=(n)=>String(n).padStart(2,'0'); return `${pad(now.getHours())}:${pad(now.getMinutes())}`; }
-    };
-
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
+    const formatTimeEU = (d) => { try { return new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false, hourCycle: 'h23' }); } catch { const n=new Date(); const p=(x)=>String(x).padStart(2,'0'); return p(n.getHours())+':'+p(n.getMinutes()); } };
     const firstLine = (str) => { if (!str) return ''; const i = str.indexOf('\n'); return (i === -1 ? str : str.slice(0,i)).trim(); };
-
-    const makeConversationId = (d = new Date()) => {
-      const pad = (n) => String(n).padStart(2,'0');
-      return [d.getFullYear(), pad(d.getMonth()+1), pad(d.getDate()), pad(d.getHours()), pad(d.getMinutes()), pad(d.getSeconds())].join('');
-    };
-
+    const makeConversationId = (d=new Date()) => { const p=(n)=>String(n).padStart(2,'0'); return [d.getFullYear(),p(d.getMonth()+1),p(d.getDate()),p(d.getHours()),p(d.getMinutes()),p(d.getSeconds())].join(''); };
     const hasContent = (s) => String(s).trim().length > 0;
 
-    /* =======================
-       Layout helpers (mobile)
-    ======================= */
-    const setComposerPadding = () => {
-      const h = composerEl ? composerEl.getBoundingClientRect().height : 72;
-      document.documentElement.style.setProperty('--composerH', h + 'px');
-    };
+    // ========== Layout (mobile) ==========
+    const setComposerPadding = () => { const h = composerEl ? composerEl.getBoundingClientRect().height : 72; document.documentElement.style.setProperty('--composerH', h + 'px'); };
 
-    /* =======================
-       Persistence
-    ======================= */
-    const loadSettings = () => {
-      const s = JSON.parse(localStorage.getItem('inbox_settings') || '{}');
-      return { url: s.url || '', theme: s.theme || 'light', tz: 'Europe/Dublin', timeout: 10000, corsMode: 'cors' };
-    };
-    const saveSettings = () => {
-      const s = { url: (ui.cfgUrl.value || '').trim(), theme: (ui.cfgTheme.value || 'light'), tz: 'Europe/Dublin', timeout: 10000, corsMode: 'cors' };
-      localStorage.setItem('inbox_settings', JSON.stringify(s));
-      state.settings = s; applyTheme(s.theme);
-    };
+    // ========== Storage ==========
+    const loadSettings = () => { const s = JSON.parse(localStorage.getItem('inbox_settings') || '{}'); return { url: s.url || '', theme: s.theme || 'light', tz: 'Europe/Dublin', timeout: 10000, corsMode: 'cors' }; };
+    const saveSettings = () => { const s = { url: (ui.cfgUrl.value || '').trim(), theme: (ui.cfgTheme.value || 'light'), tz: 'Europe/Dublin', timeout: 10000, corsMode: 'cors' }; localStorage.setItem('inbox_settings', JSON.stringify(s)); state.settings = s; applyTheme(s.theme); };
     const loadConversations = () => {
-      const oldHist = JSON.parse(localStorage.getItem('inbox_history') || '[]');
       const saved = JSON.parse(localStorage.getItem('inbox_conversations') || 'null');
-      if (!saved) {
-        const base = { current: null, order: [], map: {} };
-        if (Array.isArray(oldHist) && oldHist.length) { const id = makeConversationId(); base.current = id; base.order.unshift(id); base.map[id] = oldHist; }
-        localStorage.setItem('inbox_conversations', JSON.stringify(base));
-        return base;
-      }
-      try {
-        if (typeof saved !== 'object' || !saved) throw 0;
+      if (saved && typeof saved === 'object') {
         saved.current = saved.current || null;
         saved.order = Array.isArray(saved.order) ? saved.order : [];
-        saved.map = (typeof saved.map === 'object' && saved.map) ? saved.map : {};
+        saved.map = (saved.map && typeof saved.map === 'object') ? saved.map : {};
         return saved;
-      } catch {
-        const base = { current: null, order: [], map: {} };
-        localStorage.setItem('inbox_conversations', JSON.stringify(base));
-        return base;
       }
+      const base = { current: null, order: [], map: {} };
+      localStorage.setItem('inbox_conversations', JSON.stringify(base));
+      return base;
     };
     const saveConversations = () => localStorage.setItem('inbox_conversations', JSON.stringify(state.conv));
 
-    /* =======================
-       State
-    ======================= */
+    // ========== State ==========
     const state = { settings: loadSettings(), conv: loadConversations() };
 
-    /* =======================
-       Theme & Settings
-    ======================= */
-    const applyTheme = (theme) => {
-      document.body.classList.toggle('theme-dark', theme === 'dark');
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'dark' ? '#0f172a' : '#ffffff');
-    };
+    // ========== Theme & Settings ==========
+    const applyTheme = (theme) => { document.body.classList.toggle('theme-dark', theme === 'dark'); document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'dark' ? '#0f172a' : '#ffffff'); };
     const fillSettingsForm = () => { ui.cfgUrl.value = state.settings.url || ''; ui.cfgTheme.value = state.settings.theme || 'light'; };
     const openSettings = () => { closeDrawer(); fillSettingsForm(); ui.settingsModal.classList.add('open'); ui.settingsModal.setAttribute('aria-hidden','false'); };
     const closeSettings = () => { ui.settingsModal.classList.remove('open'); ui.settingsModal.setAttribute('aria-hidden','true'); };
 
-    /* =======================
-       Conversations
-    ======================= */
-    const ensureConversationExists = () => {
-      if (!state.conv.current) createConversation();
-      if (!state.conv.map[state.conv.current]) state.conv.map[state.conv.current] = [];
-      saveConversations();
-    };
-    const createConversation = () => {
-      const id = makeConversationId();
-      state.conv.current = id;
-      state.conv.order = [id, ...state.conv.order.filter(x => x !== id)];
-      state.conv.map[id] = [];
-      saveConversations();
-      renderConversationList();
-      renderCurrentConversation();
-    };
-    const setCurrentConversation = (id) => {
-      if (!id || !state.conv.map[id]) return;
-      state.conv.current = id; saveConversations();
-      renderConversationList();
-      renderCurrentConversation();
-    };
+    // ========== Conversations ==========
+    const ensureConversationExists = () => { if (!state.conv.current) createConversation(); if (!state.conv.map[state.conv.current]) state.conv.map[state.conv.current] = []; saveConversations(); };
+    const createConversation = () => { const id = makeConversationId(); state.conv.current = id; state.conv.order = [id, ...state.conv.order.filter(x => x !== id)]; state.conv.map[id] = []; saveConversations(); renderConversationList(); renderCurrentConversation(); };
+    const setCurrentConversation = (id) => { if (!id || !state.conv.map[id]) return; state.conv.current = id; saveConversations(); renderConversationList(); renderCurrentConversation(); };
     const getCurrentHistory = () => state.conv.map[state.conv.current] || [];
-    const pushHistory = (role, content) => {
-      const item = { role, content, when: new Date().toISOString() };
-      const arr = state.conv.map[state.conv.current] || (state.conv.map[state.conv.current] = []);
-      arr.push(item); saveConversations();
-      return item;
-    };
+    const pushHistory = (role, content) => { const item = { role, content, when: new Date().toISOString() }; const arr = state.conv.map[state.conv.current] || (state.conv.map[state.conv.current] = []); arr.push(item); saveConversations(); return item; };
 
-    /* =======================
-       Rendering
-    ======================= */
-    const firstUserTitle = (msgs) => {
-      if (!msgs || !msgs.length) return 'Nuevo chat';
-      const u = msgs.find(m => m && m.role === 'user' && typeof m.content === 'string');
-      const pick = (u && u.content) || msgs[0].content || '';
-      return firstLine(pick) || 'Nuevo chat';
-    };
+    // ========== Rendering ==========
+    const firstUserTitle = (msgs) => { if (!msgs || !msgs.length) return 'Nuevo chat'; const u = msgs.find(m => m && m.role === 'user' && typeof m.content === 'string'); const pick = (u && u.content) || msgs[0].content || ''; return firstLine(pick) || 'Nuevo chat'; };
     const secondLinePreview = (msgs) => { if (!msgs || msgs.length < 2) return ''; const m = msgs[1]; return (m && typeof m.content === 'string') ? firstLine(m.content) : ''; };
     const formatConvTitle = (id) => { if (!id || id.length < 8) return id || 'Chat'; const y=id.slice(0,4), mo=id.slice(4,6), d=id.slice(6,8), hh=id.slice(8,10)||'00', mm=id.slice(10,12)||'00'; return `${d}/${mo}/${y} ${hh}:${mm}`; };
 
@@ -402,18 +308,13 @@
 
     const renderCurrentConversation = () => { ui.chat.innerHTML = ''; for (const m of getCurrentHistory()) addMsg(m.role, m.content, m.when); };
 
-    /* =======================
-       Drawer & Settings
-    ======================= */
+    // ========== Drawer & Settings ==========
     const openDrawer = () => ui.drawer.classList.add('open');
     const closeDrawer = () => ui.drawer.classList.remove('open');
     const toggleDrawer = () => ui.drawer.classList.toggle('open');
 
-    /* =======================
-       Networking
-    ======================= */
+    // ========== Networking ==========
     const buildPayload = (text) => ({ conversation_id: state.conv.current, text, source: 'webapp', timezone: state.settings.tz });
-
     const sendToWebhook = async (payload) => {
       const headers = { 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' };
       const ctrl = new AbortController();
@@ -424,7 +325,6 @@
         return resp;
       } finally { clearTimeout(t); }
     };
-
     const parseReply = async (res) => {
       const ct = (res.headers && res.headers.get && res.headers.get('content-type')) || '';
       if (ct.includes('application/json')) {
@@ -436,9 +336,7 @@
       return t || '✔️ OK';
     };
 
-    /* =======================
-       Actions
-    ======================= */
+    // ========== Actions ==========
     const sendText = async () => {
       const text = (ui.input.value || '').trim();
       if (!text) return;
@@ -456,12 +354,9 @@
         const botItem = pushHistory('assistant', '⚠️ Error al enviar: ' + (err.message || err)); addMsg('assistant', botItem.content, botItem.when);
       }
     };
-
     const updateSendState = () => { ui.btnSend.disabled = !hasContent(ui.input.value); };
 
-    /* =======================
-       Events
-    ======================= */
+    // ========== Events ==========
     const bindEvents = () => {
       ui.btnSend.addEventListener('click', sendText);
       ui.input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!ui.btnSend.disabled) sendText(); } });
@@ -475,56 +370,14 @@
       if (ui.btnClose) ui.btnClose.addEventListener('click', closeSettings);
       if (ui.btnSave) ui.btnSave.addEventListener('click', () => { saveSettings(); closeSettings(); });
 
-      // iOS: reduce 300ms delay
       document.addEventListener('touchstart', ()=>{}, {passive:true});
       window.addEventListener('resize', setComposerPadding);
       if (window.visualViewport) window.visualViewport.addEventListener('resize', setComposerPadding);
     };
 
-    /* =======================
-       Boot
-    ======================= */
-    const boot = () => {
-      applyTheme(state.settings.theme);
-      ensureConversationExists();
-      renderConversationList();
-      renderCurrentConversation();
-      updateSendState();
-      bindEvents();
-      setComposerPadding();
-    };
-
+    // ========== Boot ==========
+    const boot = () => { applyTheme(state.settings.theme); ensureConversationExists(); renderConversationList(); renderCurrentConversation(); updateSendState(); bindEvents(); setComposerPadding(); };
     boot();
-
-    /* =======================
-       Self-tests (console only)
-    ======================= */
-    (function selfTests(){
-      const log = (name, ok) => console.log((ok?'✅':'❌') + ' ' + name);
-      try { const converted = 'hola\nmundo'.replace(/\n/g,'<br/>' ); log('Reemplaza \\n por <br/>', converted === 'hola<br/>mundo'); } catch(e){}
-      try { const esc = escapeHtml("<b>&\"'></b>"); log('escapeHtml escapa entidades', esc.includes('&lt;b&gt;') && esc.includes('&gt;') && esc.includes('&amp;') && esc.includes('&quot;') && esc.includes('&#39;')); } catch(e){}
-      try { const id = makeConversationId(new Date('2025-10-16T12:34:56')); log('conversation_id numerico', id === '20251016123456'); } catch(e){}
-      try { const tf = formatTimeEU('2025-10-16T21:05:00'); log('formatTimeEU devuelve HH:mm 24h', /^\d{2}:\d{2}$/.test(tf)); } catch(e){}
-      try { const ok = hasContent('123') && !hasContent('   '); log('hasContent: números activan, espacios no', ok); } catch(e){}
-      try {
-        const arrRes = { headers: { get: ()=>'application/json' }, json: async()=> ([{ output: 'OK' }]) };
-        parseReply(arrRes).then(v=>log('parseReply array output', v==='OK'));
-        const objRes = { headers: { get: ()=>'application/json' }, json: async()=> ({ reply: 'OK2' }) };
-        parseReply(objRes).then(v=>log('parseReply object reply', v==='OK2'));
-        const txtRes = { headers: { get: ()=>'text/plain' }, text: async()=>('Plain text') };
-        parseReply(txtRes).then(v=>log('parseReply text fallback', v==='Plain text'));
-      } catch(e){}
-      try {
-        const msgs = [ { role:'assistant', content:'Hola' }, { role:'user', content:'Primera línea\nSegunda' }, { role:'assistant', content:'Respuesta' } ];
-        log('firstUserTitle toma 1ª línea user', firstUserTitle(msgs)==='Primera línea');
-        log('secondLinePreview usa segundo mensaje', secondLinePreview(msgs)==='Primera línea');
-      } catch(e){}
-      try {
-        const p = (text) => ({...buildPayload(text)});
-        const sample = p('hola');
-        log('payload incluye conversation_id', sample && sample.conversation_id && !('session_id' in sample));
-      } catch(e){}
-    })();
 
   })();
   </script>
