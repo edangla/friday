@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Friday</title>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -89,6 +89,9 @@
     .btn { appearance: none; border: 0; padding: 8px 12px; border-radius: 10px; background: var(--btn-bg); color: var(--txt); cursor: pointer; }
     .btn:hover { filter: brightness(0.98); }
 
+    /* Bigger, more tappable header buttons */
+    header .btn, .drawer-head .btn { padding: 10px 14px; min-height: 44px; font-size: 18px; }
+
     /* ====== CHAT ====== */
     .chat { padding: 12px 12px calc(12px + var(--composerH, 72px)); display: grid; align-content: start; gap: 8px; }
     .msg { display: grid; gap: 4px; max-width: 88%; padding: 8px 10px; border-radius: 16px; border: 1px solid var(--bubble-border); background: var(--bubble-bot); }
@@ -107,6 +110,9 @@
     .send:hover { background: var(--primary-solid-hover); }
     .send[disabled] { background: var(--btn-bg); color: var(--muted); cursor: not-allowed; opacity: 0.7; }
 
+    /* Prevent iOS zoom on focus: ensure interactive controls are >=16px */
+    input, textarea, select, button { font-size: 16px; }
+
     /* ====== SETTINGS MODAL ====== */
     .settings { position: fixed; inset: 0; display: none; place-items: center; background: rgba(0,0,0,.25); z-index: 50; }
     .settings.open { display: grid; }
@@ -115,7 +121,7 @@
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .actions { display:flex; gap:8px; justify-content:flex-end; }
     label { font-size: 12px; color: var(--muted); }
-    input[type="text"], select { $1 font-size: 16px; }
+    input[type="text"], select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--bubble-border); background: var(--input-bg); color: var(--txt); font-size: 16px; }
 
     /* ====== DRAWER (Conversaciones) ====== */
     .drawer { position: fixed; inset: 0 auto 0 0; width: min(92vw, 360px); max-width: 92vw; background: var(--panel); border-right: 1px solid var(--bubble-border); transform: translateX(-100%); transition: transform .2s ease; z-index: 20; display: grid; grid-template-rows: auto 1fr; }
@@ -171,7 +177,7 @@
 
     <div class="composer">
       <div class="row">
-        <textarea id="input" placeholder="Escribe un mensaje"></textarea>
+        <textarea id="input" placeholder="Escribe un mensaje" inputmode="text" autocapitalize="sentences" autocomplete="off" autocorrect="on" spellcheck="true"></textarea>
         <button class="send" id="btnSend" title="Enviar" disabled>➤</button>
       </div>
     </div>
