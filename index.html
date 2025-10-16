@@ -82,7 +82,9 @@
       display: grid; grid-template-columns: auto 1fr auto; align-items: center;
       gap: 8px; padding: calc(12px + var(--sat)) calc(16px + var(--sar)) 12px calc(16px + var(--sal)); background: var(--panel); border-bottom: 1px solid var(--bubble-border);
     }
-    .title { display:flex; flex-direction:column; text-align:center; }
+    .title { display:flex; align-items:center; justify-content:center; gap:8px; text-align:left; }
+    .title .title-text { display:flex; flex-direction:column; line-height: 1; }
+    .logo { width: 28px; height: 28px; border-radius: 8px; object-fit: cover; }
     .title h1 { font-size: 18px; margin: 0; letter-spacing: .2px; font-weight: 700; }
     .title small { font-size: 12px; color: var(--ok); font-weight: 600; }
 
@@ -90,7 +92,7 @@
     .btn:hover { filter: brightness(0.98); }
 
     /* Bigger, more tappable header buttons */
-    header .btn, .drawer-head .btn { padding: 10px 14px; min-height: 44px; font-size: 18px; }
+    header .btn, .drawer-head .btn { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; background: var(--btn-bg); color: var(--txt); display: inline-flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid #ffffff; }
 
     /* ====== CHAT ====== */
     .chat { padding: 12px 12px calc(12px + var(--composerH, 72px)); display: grid; align-content: start; gap: 8px; }
@@ -104,9 +106,9 @@
     /* ====== COMPOSER ====== */
     .composer { position: sticky; bottom: 0; background: var(--panel); padding: 10px calc(12px + var(--sar)) calc(10px + var(--sab)) calc(12px + var(--sal)); border-top: 1px solid var(--bubble-border); display: grid; gap: 8px; }
     .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
-    textarea { width: 100%; resize: none; height: 52px; padding: 12px 14px; border-radius: 20px; background: var(--input-bg); color: var(--txt); border: 1px solid var(--bubble-border); outline: none; line-height: 1.4; font-size: 16px; }
+    textarea { width: 100%; resize: none; height: 52px; padding: 12px 14px; border-radius: 999px; background: var(--input-bg); color: var(--txt); border: 1px solid #ffffff; outline: none; line-height: 1.4; font-size: 16px; }
     textarea::placeholder { color: #9aa2ab; }
-    .send { width: 52px; min-width: 52px; height: 52px; border-radius: 50%; background: var(--primary-solid); color: #ffffff; font-weight: 700; border: 1px solid var(--bubble-border); display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+    .send { width: 52px; min-width: 52px; height: 52px; border-radius: 50%; background: var(--primary-solid); color: #ffffff; font-weight: 700; border: 1px solid #ffffff; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
     .send:hover { background: var(--primary-solid-hover); }
     .send[disabled] { background: var(--btn-bg); color: var(--muted); cursor: not-allowed; opacity: 0.7; }
 
@@ -153,8 +155,11 @@
     <header>
       <button class="btn" id="btnDrawer" aria-label="Abrir conversaciones">☰</button>
       <div class="title">
-        <h1>Friday</h1>
-        <small>Active</small>
+        <img src="icon-180.png?v=2" alt="Logo" class="logo">
+        <div class="title-text">
+          <h1>Friday</h1>
+          <small>Active</small>
+        </div>
       </div>
       <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end">
         <button class="btn" id="btnNewChat" title="Nuevo chat">＋</button>
