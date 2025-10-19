@@ -60,7 +60,7 @@
     }
     .app { height: 100vh; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
     @supports (height: 100dvh) { .app { height: 100dvh; } }
-    @supports (height: 100svh) { .chat { height: calc(100svh - var(--headerH, 56px) - var(--composerH, 72px)); } }
+    @supports (height: 100svh) { .chat { height: calc(100svh - var(--headerH, 56px) - var(--composerH, 72px) - var(--kb, 0px)); } }
     header {
       position: fixed; left: 0; right: 0; top: 0; z-index: 10;
       display: grid; grid-template-columns: auto 1fr auto; align-items: center;
@@ -75,7 +75,7 @@
     .btn { appearance: none; border: 0; padding: 8px 12px; border-radius: 10px; background: var(--btn-bg); color: var(--txt); cursor: pointer; }
     .btn:hover { filter: brightness(0.98); }
     header .btn, .drawer-head .btn { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; background: var(--btn-bg); color: var(--txt); display: inline-flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid var(--outline); }
-    .chat { padding: 12px; display: grid; align-content: start; gap: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; height: calc(100dvh - var(--headerH, 56px) - var(--composerH, 72px)); margin-top: var(--headerH, 56px); margin-bottom: var(--composerH, 72px); min-height: 0; }
+    .chat { padding: 12px; display: grid; align-content: start; gap: 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; height: calc(100dvh - var(--headerH, 56px) - var(--composerH, 72px) - var(--kb, 0px)); margin-top: var(--headerH, 56px); margin-bottom: var(--composerH, 72px); min-height: 0; }
     .msg { display: grid; gap: 4px; max-width: 88%; padding: 8px 10px; border-radius: 16px; border: 1px solid var(--bubble-border); background: var(--bubble-bot); }
     .from-me { justify-self: end; border-bottom-right-radius: 6px; background: var(--primary-bg); border-color: rgba(0,0,0,0.06); color: inherit; min-width: clamp(80px, 10%, 200px); }
     .from-bot { justify-self: start; border-bottom-left-radius: 6px; }
@@ -91,7 +91,7 @@
     @keyframes dotBlink { 0%,80%,100%{ opacity:.25; transform: translateY(0);} 40%{ opacity:1; transform: translateY(-2px);} }
     .typing-line { display:flex; align-items:center; gap:6px; color: var(--muted); font-size: 12px; padding: 2px 0; justify-self: start; }
     .typing-line .typing-text { margin-left: 0; }
-    .composer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); padding: 10px calc(12px + var(--sar)) calc(10px + var(--sab)) calc(12px + var(--sal)); border-top: 1px solid var(--bubble-border); display: grid; gap: 8px; }
+    .composer { position: fixed; left: 0; right: 0; bottom: var(--kb, 0px); background: var(--panel); padding: 10px calc(12px + var(--sar)) calc(10px + var(--sab)) calc(12px + var(--sal)); border-top: 1px solid var(--bubble-border); display: grid; gap: 8px; }
     .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
     textarea { width: 100%; resize: none; height: 52px; padding: 12px 14px; border-radius: 999px; background: var(--input-bg); color: var(--txt); border: 1px solid var(--outline); outline: none; line-height: 1.4; font-size: 16px; }
     textarea::placeholder { color: #9aa2ab; }
@@ -213,10 +213,16 @@
     const setLayout = () => {
       const hh = headerEl ? headerEl.getBoundingClientRect().height : 56;
       const ch = composerEl ? composerEl.getBoundingClientRect().height : 72;
-      const vvh = (window.visualViewport ? window.visualViewport.height : window.innerHeight) || window.innerHeight;
+      const vv = window.visualViewport;
+      const vvh = (vv ? vv.height : window.innerHeight) || window.innerHeight;
+      let kb = 0;
+      if (vv) {
+        kb = Math.max(0, (window.innerHeight - (vv.height + vv.offsetTop)));
+      }
       document.documentElement.style.setProperty('--headerH', hh + 'px');
       document.documentElement.style.setProperty('--composerH', ch + 'px');
       document.documentElement.style.setProperty('--vvh', vvh + 'px');
+      document.documentElement.style.setProperty('--kb', kb + 'px');
     };
     const loadSettings = () => { const s = JSON.parse(localStorage.getItem('inbox_settings') || '{}'); return { url: s.url || '', theme: s.theme || 'light', tz: 'Europe/Dublin', timeout: 120000, corsMode: 'cors' }; };
     const saveSettings = () => { const s = { url: (ui.cfgUrl.value || '').trim(), theme: (ui.cfgTheme.value || 'light'), tz: 'Europe/Dublin', timeout: 120000, corsMode: 'cors' }; localStorage.setItem('inbox_settings', JSON.stringify(s)); state.settings = s; applyTheme(s.theme); };
@@ -247,6 +253,8 @@
     const firstUserTitle = (msgs) => { if (!msgs || !msgs.length) return 'Nuevo chat'; const u = msgs.find(m => m && m.role === 'user' && typeof m.content === 'string'); const pick = (u && u.content) || msgs[0].content || ''; return firstLine(pick) || 'Nuevo chat'; };
     const secondLinePreview = (msgs) => { if (!msgs || msgs.length < 2) return ''; const m = msgs[1]; return (m && typeof m.content === 'string') ? firstLine(m.content) : ''; };
     const formatConvTitle = (id) => { if (!id || id.length < 8) return id || 'Chat'; const y=id.slice(0,4), mo=id.slice(4,6), d=id.slice(6,8), hh=id.slice(8,10)||'00', mm=id.slice(10,12)||'00'; return `${d}/${mo}/${y} ${hh}:${mm}`; };
+    const purgeSelfTest = () => { let changed=false; for (const id in state.conv.map){ const arr=state.conv.map[id]; if(Array.isArray(arr)){ const filtered=arr.filter(m => !(m && m.role==='system' && m.content==='self-test')); if(filtered.length!==arr.length){ state.conv.map[id]=filtered; changed=true; } } } if(changed) saveConversations(); };
+
     const renderConversationList = () => { ui.convList.innerHTML = ''; for (const id of state.conv.order) { const msgs = state.conv.map[id] || []; const row = document.createElement('div'); row.className = 'conv-item' + (id === state.conv.current ? ' active' : ''); row.setAttribute('tabindex','0'); row.addEventListener('click', () => { setCurrentConversation(id); closeDrawer(); }); const card = document.createElement('div'); card.className = 'conv-card'; card.innerHTML = `<div class="conv-title">${escapeHtml(firstUserTitle(msgs))}</div>
                           <div class="conv-date">${escapeHtml(formatConvTitle(id))}</div>
                           <div class="conv-sub">${escapeHtml(secondLinePreview(msgs))}</div>`; const del = document.createElement('button'); del.className = 'btn-trash'; del.title = 'Eliminar conversación'; del.innerText = '🗑️'; del.addEventListener('click', (e) => { e.stopPropagation(); deleteConversation(id); }); row.appendChild(card); row.appendChild(del); ui.convList.appendChild(row); } };
@@ -279,27 +287,9 @@
       window.addEventListener('resize', setLayout);
       if (window.visualViewport) window.visualViewport.addEventListener('resize', setLayout);
     };
-    const boot = () => { applyTheme(state.settings.theme); ensureConversationExists(); renderConversationList(); renderCurrentConversation(); updateSendState(); bindEvents(); setLayout(); };
+    const boot = () => { applyTheme(state.settings.theme); ensureConversationExists(); purgeSelfTest(); renderConversationList(); renderCurrentConversation(); updateSendState(); bindEvents(); setLayout(); };
     boot();
-    (function selfTests(){
-      try {
-        console.assert(typeof JSON.parse === 'function' && JSON.parse('{"a":1}').a === 1, 'JSON.parse disponible');
-        const id = makeConversationId(new Date('2025-10-16T12:34:56'));
-        console.assert(id === '20251016123456', 'conversation_id con formato YYYYMMDDHHmmss');
-        const p = buildPayload('test');
-        console.assert(p && p.conversation_id && p.text === 'test' && !('session_id' in p), 'payload válido (sin session_id)');
-        console.assert(state.settings.timeout === 120000, 'timeout de 120s configurado');
-        const before = getCurrentHistory().length; pushHistory('system', 'self-test'); const after = getCurrentHistory().length; console.assert(after === before + 1, 'pushHistory incrementa historial');
-        ui.input.value = ''; updateSendState(); console.assert(ui.btnSend.disabled === true, 'send deshabilitado vacío'); ui.input.value = 'x'; updateSendState(); console.assert(ui.btnSend.disabled === false, 'send habilitado con texto'); ui.input.value=''; updateSendState();
-        const r1 = new Response('[{"output":"hola"}]', {headers:{'Content-Type':'application/json'}}); parseReply(r1).then(v=>console.assert(v==='hola','parse array json'));
-        const r2 = new Response('{"reply":"ok"}', {headers:{'Content-Type':'application/json'}}); parseReply(r2).then(v=>console.assert(v==='ok','parse obj json'));
-        const r3 = new Response('texto'); parseReply(r3).then(v=>console.assert(v==='texto','parse text'));
-        const t0 = typingRef; showTyping(); console.assert(typingRef, 'typing visible'); hideTyping(); console.assert(!typingRef, 'typing oculto');
-        console.log('✅ Friday self-tests OK');
-      } catch (e) {
-        console.warn('⚠️ Friday self-tests: problema en pruebas', e);
-      }
-    })();
+    
   })();
   </script>
 </body>
